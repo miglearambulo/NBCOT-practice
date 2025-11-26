@@ -44,6 +44,29 @@
       align-items: center;
       margin-bottom: 12px;
       gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .timer {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #4f46e5;
+      padding: 8px 16px;
+      background: #eef2ff;
+      border-radius: 8px;
+      border: 2px solid #c7d2fe;
+    }
+
+    .timer.warning {
+      color: #dc2626;
+      background: #fef2f2;
+      border-color: #fecaca;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
     .question-number {
@@ -191,6 +214,43 @@
       margin-top: 4px;
     }
 
+    .start-screen {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .start-screen h1 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+
+    .start-screen p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      color: #374151;
+    }
+
+    .start-screen ul {
+      text-align: left;
+      max-width: 500px;
+      margin: 24px auto;
+      line-height: 1.8;
+      color: #4b5563;
+    }
+
+    .btn-start {
+      background: #4f46e5;
+      color: white;
+      font-size: 1.1rem;
+      padding: 14px 32px;
+      margin-top: 20px;
+    }
+
+    .btn-start:hover {
+      background: #4338ca;
+    }
+
     @media (max-width: 640px) {
       .card {
         padding: 18px 16px;
@@ -217,12 +277,28 @@
 </head>
 <body>
 <div class="app">
-  <div class="card" id="quiz-card">
+  <div class="card" id="start-card">
+    <div class="start-screen">
+      <h1>NBCOT Practice Quiz</h1>
+      <p><strong>Welcome!</strong> This practice quiz will help you prepare for the NBCOT exam.</p>
+      <ul>
+        <li>📝 <strong>15 questions</strong> covering key OT concepts</li>
+        <li>⏱️ <strong>30 minutes</strong> to complete (timer starts when you begin)</li>
+        <li>🔄 Navigate back and forth between questions</li>
+        <li>✅ See answers and rationales after submitting</li>
+      </ul>
+      <p>When you're ready, click the button below to start the timer and begin.</p>
+      <button type="button" class="btn-start" id="start-btn">Start Quiz</button>
+    </div>
+  </div>
+
+  <div class="card" id="quiz-card" style="display:none;">
     <h1>NBCOT Practice Quiz</h1>
-    <p class="muted">Answer all questions. You can move back and forth. You will see correctness and rationales only after submitting.</p>
+    <p class="muted">You have 30 minutes to complete this quiz. Answer all questions. You can move back and forth. You will see correctness and rationales only after submitting.</p>
 
     <div class="question-header">
       <div class="question-number" id="question-number"></div>
+      <div class="timer" id="timer">30:00</div>
       <div class="progress" id="progress-text"></div>
     </div>
     <div class="progress-bar-wrapper">
@@ -421,7 +497,13 @@
 
   let currentIndex = 0;
   const answers = new Array(questions.length).fill(null);
+  let timeRemaining = 30 * 60; // 30 minutes in seconds
+  let timerInterval = null;
+  let quizSubmitted = false;
+  let quizStarted = false;
 
+  const startCard = document.getElementById("start-card");
+  const startBtn = document.getElementById("start-btn");
   const questionNumberEl = document.getElementById("question-number");
   const progressTextEl = document.getElementById("progress-text");
   const progressBarEl = document.getElementById("progress-bar");
@@ -434,6 +516,7 @@
   const quizCard = document.getElementById("quiz-card");
   const reviewCard = document.getElementById("review-card");
   const reviewContent = document.getElementById("review-content");
+  const timerEl = document.getElementById("timer");
 
   function renderQuestion() {
     const q = questions[currentIndex];
@@ -505,9 +588,15 @@
     }
   });
 
-  submitBtn.addEventListener("click", () => {
-    const allAnswered = answers.every(a => a !== null);
-    if (!allAnswered) return;
+  function submitQuiz() {
+    if (quizSubmitted) return;
+    quizSubmitted = true;
+    
+    // Stop the timer
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
 
     // Build review
     reviewContent.innerHTML = "";
@@ -548,9 +637,52 @@
     quizCard.style.display = "none";
     reviewCard.style.display = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function updateTimer() {
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Add warning style when less than 5 minutes remain
+    if (timeRemaining <= 300) {
+      timerEl.classList.add('warning');
+    }
+    
+    // Time's up - auto submit
+    if (timeRemaining <= 0) {
+      clearInterval(timerInterval);
+      timerEl.textContent = "0:00";
+      alert("Time's up! The quiz will now be submitted automatically.");
+      submitQuiz();
+      return;
+    }
+    
+    timeRemaining--;
+  }
+
+  function startTimer() {
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  submitBtn.addEventListener("click", () => {
+    const allAnswered = answers.every(a => a !== null);
+    if (!allAnswered) {
+      alert("Please answer all questions before submitting.");
+      return;
+    }
+    submitQuiz();
   });
 
-  // Initialize
+  startBtn.addEventListener("click", () => {
+    quizStarted = true;
+    startCard.style.display = "none";
+    quizCard.style.display = "block";
+    startTimer();
+  });
+
+  // Initialize (but don't start timer yet)
   renderQuestion();
   updateSubmitAvailability();
 </script>
