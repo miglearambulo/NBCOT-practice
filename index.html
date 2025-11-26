@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NBCOT Practice Quiz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f5fa;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 900px;
+      width: 100%;
+      padding: 24px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.7rem;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    .question-number {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .progress {
+      font-size: 0.85rem;
+      color: #777;
+    }
+
+    .progress-bar-wrapper {
+      background: #ececf4;
+      border-radius: 999px;
+      height: 8px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #6366f1, #22c55e);
+      transition: width 0.25s ease-out;
+    }
+
+    .question-text {
+      font-size: 1rem;
+      margin: 12px 0 16px;
+      line-height: 1.5;
+    }
+
+    .options {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .option {
+      margin-bottom: 10px;
+    }
+
+    .option label {
+      display: flex;
+      align-items: flex-start;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d4d4e0;
+      cursor: pointer;
+      transition: background 0.18s ease, border 0.18s ease;
+      gap: 8px;
+    }
+
+    .option input[type="radio"] {
+      margin-top: 3px;
+    }
+
+    .option label:hover {
+      background: #f3f4ff;
+      border-color: #a5b4fc;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border-radius: 999px;
+      padding: 10px 18px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .btn-submit {
+      background: #16a34a;
+      color: white;
+      margin-left: auto;
+    }
+
+    .muted {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    /* Review styles */
+    .review-question {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .review-question:last-child {
+      border-bottom: none;
+    }
+
+    .review-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .answer-line {
+      margin: 4px 0;
+      font-size: 0.95rem;
+    }
+
+    .correct {
+      color: #16a34a;
+      font-weight: 600;
+    }
+
+    .incorrect {
+      color: #dc2626;
+      font-weight: 600;
+    }
+
+    .rationale {
+      font-size: 0.9rem;
+      color: #4b5563;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 18px 16px;
+      }
+
+      .nav-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-submit {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+      }
+
+      .btn-secondary,
+      .btn-primary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="card" id="quiz-card">
+    <h1>NBCOT Practice Quiz</h1>
+    <p class="muted">Answer all questions. You can move back and forth. You will see correctness and rationales only after submitting.</p>
+
+    <div class="question-header">
+      <div class="question-number" id="question-number"></div>
+      <div class="progress" id="progress-text"></div>
+    </div>
+    <div class="progress-bar-wrapper">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="question-text" id="question-text"></div>
+
+    <form id="options-form">
+      <ul class="options" id="options-list"></ul>
+    </form>
+
+    <div class="nav-buttons">
+      <button type="button" class="btn-secondary" id="prev-btn">← Previous</button>
+      <button type="button" class="btn-primary" id="next-btn">Next →</button>
+      <button type="button" class="btn-submit" id="submit-btn" disabled>Submit All Answers</button>
+    </div>
+    <p class="muted" id="completion-note"></p>
+  </div>
+
+  <div class="card" id="review-card" style="display:none;">
+    <h1>Review: Answers & Rationales</h1>
+    <p class="muted">Below are your answers, the correct answers, and rationales for each question.</p>
+    <div id="review-content"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "1. A client at Rancho Level VII completes their morning routine automatically but becomes confused when asked to complete a novel task. What is the MOST appropriate OT intervention?",
+      options: [
+        "Introduce complex problem-solving tasks in unfamiliar contexts.",
+        "Provide structured routines in familiar environments.",
+        "Encourage independent trial-and-error learning without cues.",
+        "Reduce all external prompts to promote autonomy."
+      ],
+      correctIndex: 1,
+      rationale: "Rancho Level VII clients perform well with familiar routines but struggle with new tasks and still need structure and support."
+    },
+    {
+      question: "2. A child at ACL Level 4 can dress independently only when clothes are laid out in the correct order. What is the BEST intervention?",
+      options: [
+        "Provide visual labeling and set-up of clothing in sequence.",
+        "Have the child choose clothing independently to build problem-solving.",
+        "Eliminate all cues to assess spontaneous performance.",
+        "Introduce complex written instructions for clothing selection."
+      ],
+      correctIndex: 0,
+      rationale: "ACL Level 4 clients benefit from visible cues and established sequences; they have difficulty with new problem-solving demands."
+    },
+    {
+      question: "3. A child frequently crashes into objects to obtain sensory input. What sensory diet activity is MOST appropriate?",
+      options: [
+        "Noise-canceling headphones during classroom tasks.",
+        "Heavy work tasks such as pushing, pulling, and jumping.",
+        "Deep breathing exercises only.",
+        "Eliminating all movement breaks to promote sitting tolerance."
+      ],
+      correctIndex: 1,
+      rationale: "Sensory seekers often need proprioceptive input. Heavy work helps regulate arousal and organize behavior."
+    },
+    {
+      question: "4. A teacher reports that a child becomes overwhelmed during loud transitions. What should the OT recommend as part of a sensory diet?",
+      options: [
+        "Gradually increase exposure to loud noise to build tolerance.",
+        "Provide noise-canceling headphones and access to a quiet space during transitions.",
+        "Remove movement breaks to avoid overstimulation.",
+        "Encourage the child to ignore the noise and remain in the environment."
+      ],
+      correctIndex: 1,
+      rationale: "The child is likely over-responsive to auditory input. Calming strategies and environmental modification help support regulation."
+    },
+    {
+      question: "5. Using the Sensory Integration Frame of Reference, what is the therapist’s PRIMARY goal?",
+      options: [
+        "Improve sensory processing and adaptive responses to sensory input.",
+        "Increase academic performance without addressing sensory needs.",
+        "Reduce the child’s exposure to sensory experiences.",
+        "Reinforce behavioral rules through reward systems only."
+      ],
+      correctIndex: 0,
+      rationale: "Sensory Integration (SI) FOR focuses on how the nervous system processes sensory input and on supporting effective, adaptive responses."
+    },
+    {
+      question: "6. A grandmother makes all medical decisions in a family with a strong hierarchy. What should the OT do first?",
+      options: [
+        "Ask the parent to take control of all decisions.",
+        "Respect the family hierarchy and include the grandmother in planning.",
+        "Avoid asking about decision-making roles to prevent conflict.",
+        "Insist that the child be the primary decision-maker."
+      ],
+      correctIndex: 1,
+      rationale: "OTs should provide culturally responsive care by recognizing and working within established family decision-making structures."
+    },
+    {
+      question: "7. A client performs trunk rotation exercises in sitting. In which anatomical plane is this movement occurring?",
+      options: [
+        "Sagittal plane.",
+        "Coronal (frontal) plane.",
+        "Transverse (horizontal) plane.",
+        "Oblique plane."
+      ],
+      correctIndex: 2,
+      rationale: "Rotation occurs in the transverse plane, which divides the body into upper and lower portions."
+    },
+    {
+      question: "8. A child at ACL Level 4 attempts to cook but repeatedly leaves the stove on. What should the OT recommend?",
+      options: [
+        "Supervision during meal preparation due to poor safety awareness.",
+        "Independent cooking practice to improve autonomy.",
+        "Use of complex written instruction sheets for stove use.",
+        "Eliminating cooking tasks from therapy."
+      ],
+      correctIndex: 0,
+      rationale: "Although ACL Level 4 clients can manage basic routines, they have significant safety limitations and require supervision for hazardous tasks."
+    },
+    {
+      question: "9. At Rancho Level VII, which task BEST evaluates higher-level cognitive function while remaining safe?",
+      options: [
+        "Performing familiar grooming routines in the bathroom.",
+        "Making a simple, familiar meal with occasional cues for safety.",
+        "Sorting colored blocks by size at the table.",
+        "Participating only in passive range of motion exercises."
+      ],
+      correctIndex: 1,
+      rationale: "A familiar meal with intermittent cues challenges planning and safety while matching Rancho Level VII abilities."
+    },
+    {
+      question: "10. A child becomes overly aroused and unfocused during seated classroom activities. Which sensory diet strategy is BEST?",
+      options: [
+        "Scheduling frequent movement breaks throughout the day.",
+        "Extending seated work time without breaks to build tolerance.",
+        "Removing all sensory opportunities to reduce distraction.",
+        "Adding more auditory stimuli during tasks."
+      ],
+      correctIndex: 0,
+      rationale: "Movement breaks provide regulating vestibular and proprioceptive input, helping the child maintain optimal arousal for learning."
+    },
+    {
+      question: "11. A therapist uses a platform swing and crash pad to encourage a child to jump, land, and then swing in different directions. Which frame of reference is MOST aligned with this approach?",
+      options: [
+        "Biomechanical Frame of Reference.",
+        "Sensory Integration Frame of Reference.",
+        "Motor Learning Frame of Reference.",
+        "Model of Human Occupation (MOHO)."
+      ],
+      correctIndex: 1,
+      rationale: "The activity emphasizes vestibular and proprioceptive input to elicit adaptive responses, which is characteristic of Sensory Integration FOR."
+    },
+    {
+      question: "12. A family shares caregiving responsibilities for a child with developmental delays. What should the OT focus on when planning intervention?",
+      options: [
+        "Training all participating family members in their specific caregiving roles.",
+        "Providing training only to the person identified as primary caregiver.",
+        "Encouraging the family to shift toward child independence from caregivers.",
+        "Avoiding discussion of family roles because it may cause disagreement."
+      ],
+      correctIndex: 0,
+      rationale: "When caregiving is shared, intervention should reflect this composition so that each family member is prepared for their responsibilities."
+    },
+    {
+      question: "13. Shoulder flexion from 0 to 90 degrees occurs in which anatomical plane?",
+      options: [
+        "Coronal (frontal) plane.",
+        "Transverse (horizontal) plane.",
+        "Sagittal plane.",
+        "Oblique plane."
+      ],
+      correctIndex: 2,
+      rationale: "Flexion and extension motions primarily occur in the sagittal plane."
+    },
+    {
+      question: "14. A child shows inconsistent responses to sensory input, ignoring some sensations while overreacting to others. From a Sensory Integration perspective, this pattern MOST likely reflects:",
+      options: [
+        "A purely behavioral compliance issue.",
+        "A sensory modulation difficulty.",
+        "A primary motor weakness.",
+        "A language comprehension disorder."
+      ],
+      correctIndex: 1,
+      rationale: "Difficulty regulating responses to sensory input is a hallmark of sensory modulation challenges."
+    },
+    {
+      question: "15. A client at Rancho Level VII insists they are safe to resume community driving even though they demonstrate poor judgment during simulated tasks. What should the OT do FIRST?",
+      options: [
+        "Approve the client to return to independent driving.",
+        "Provide structured feedback about observed safety limitations and discuss alternatives.",
+        "Allow the client to trial unsupervised driving to build confidence.",
+        "Avoid addressing the topic until the next progress review."
+      ],
+      correctIndex: 1,
+      rationale: "Rancho Level VII clients often overestimate their abilities. Education about safety concerns is the first step before any driving decisions."
+    }
+  ];
+
+  let currentIndex = 0;
+  const answers = new Array(questions.length).fill(null);
+
+  const questionNumberEl = document.getElementById("question-number");
+  const progressTextEl = document.getElementById("progress-text");
+  const progressBarEl = document.getElementById("progress-bar");
+  const questionTextEl = document.getElementById("question-text");
+  const optionsListEl = document.getElementById("options-list");
+  const prevBtn = document.getElementById("prev-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const submitBtn = document.getElementById("submit-btn");
+  const completionNote = document.getElementById("completion-note");
+  const quizCard = document.getElementById("quiz-card");
+  const reviewCard = document.getElementById("review-card");
+  const reviewContent = document.getElementById("review-content");
+
+  function renderQuestion() {
+    const q = questions[currentIndex];
+    questionNumberEl.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+    questionTextEl.textContent = q.question;
+
+    const answeredCount = answers.filter(a => a !== null).length;
+    progressTextEl.textContent = `${answeredCount}/${questions.length} answered`;
+    progressBarEl.style.width = `${(answeredCount / questions.length) * 100}%`;
+
+    optionsListEl.innerHTML = "";
+    q.options.forEach((opt, idx) => {
+      const li = document.createElement("li");
+      li.className = "option";
+
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "option";
+      input.value = idx;
+
+      if (answers[currentIndex] === idx) {
+        input.checked = true;
+      }
+
+      input.addEventListener("change", () => {
+        answers[currentIndex] = idx;
+        updateSubmitAvailability();
+        updateCompletionNote();
+      });
+
+      const span = document.createElement("span");
+      span.textContent = opt;
+
+      label.appendChild(input);
+      label.appendChild(span);
+      li.appendChild(label);
+      optionsListEl.appendChild(li);
+    });
+
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex === questions.length - 1;
+    updateCompletionNote();
+  }
+
+  function updateSubmitAvailability() {
+    const allAnswered = answers.every(a => a !== null);
+    submitBtn.disabled = !allAnswered;
+  }
+
+  function updateCompletionNote() {
+    const allAnswered = answers.every(a => a !== null);
+    completionNote.textContent = allAnswered
+      ? "All questions answered. You can now submit to see correct answers and rationales."
+      : "You will not see whether answers are correct until you submit the full quiz.";
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderQuestion();
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < questions.length - 1) {
+      currentIndex++;
+      renderQuestion();
+    }
+  });
+
+  submitBtn.addEventListener("click", () => {
+    const allAnswered = answers.every(a => a !== null);
+    if (!allAnswered) return;
+
+    // Build review
+    reviewContent.innerHTML = "";
+    questions.forEach((q, i) => {
+      const div = document.createElement("div");
+      div.className = "review-question";
+
+      const title = document.createElement("div");
+      title.className = "review-title";
+      title.textContent = q.question;
+      div.appendChild(title);
+
+      const userAnswerIndex = answers[i];
+      const userAnswerText = q.options[userAnswerIndex];
+      const correctAnswerText = q.options[q.correctIndex];
+      const isCorrect = userAnswerIndex === q.correctIndex;
+
+      const yourAnswer = document.createElement("div");
+      yourAnswer.className = "answer-line";
+      yourAnswer.innerHTML = `<span class="${isCorrect ? "correct" : "incorrect"}">${isCorrect ? "Your answer (Correct):" : "Your answer (Incorrect):"}</span> ${userAnswerText}`;
+      div.appendChild(yourAnswer);
+
+      if (!isCorrect) {
+        const correctLine = document.createElement("div");
+        correctLine.className = "answer-line";
+        correctLine.innerHTML = `<span class="correct">Correct answer:</span> ${correctAnswerText}`;
+        div.appendChild(correctLine);
+      }
+
+      const rationale = document.createElement("div");
+      rationale.className = "rationale";
+      rationale.textContent = "Rationale: " + q.rationale;
+      div.appendChild(rationale);
+
+      reviewContent.appendChild(div);
+    });
+
+    quizCard.style.display = "none";
+    reviewCard.style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // Initialize
+  renderQuestion();
+  updateSubmitAvailability();
+</script>
+</body>
+</html>
